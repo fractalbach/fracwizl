@@ -4,7 +4,6 @@
 		{
 			"label": "BUILD: clang++",
 			"type": "cppbuild",
-			// "type": "shell",
 			"command": "./run/build.sh",
 			"args": [],
 			"options": {

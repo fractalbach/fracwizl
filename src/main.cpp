@@ -6,26 +6,24 @@
 #include "draw.h"
 
 int main() {
-	printf( "%s", (const char *)INTRO_TEXT );
 
 	const char * title = "FWIZL";
 	int width = g_defaultScreenWidth;
 	int height = g_defaultScreenHeight;
+	bool quit = false;
+
+	printf( "%s", (const char *)INTRO_TEXT );
 
 	if( SDL_Init( SDL_INIT_VIDEO ) != 0 ) {
 		fprintf( stderr, "Video initialization failed: %s\n", SDL_GetError() );
 		return 1;
 	}
 
-	SDL_Window * window = SDL_CreateWindow(
-		title,
-		SDL_WINDOWPOS_CENTERED,
-		SDL_WINDOWPOS_CENTERED,
-		width,
-		height,
-		SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE
-	);
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MAJOR_VERSION, 3 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 3 );
+	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
 
+	SDL_Window * window = SDL_CreateWindow( title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );
 	if ( !window ) {
 		fprintf( stderr, "Window creation failed: %s\n", SDL_GetError() );
 		return 1;
@@ -37,13 +35,17 @@ int main() {
 		return 1;
 	}
 
+	glewExperimental = GL_TRUE;
 	GLenum glewResult = glewInit();
 	if ( glewResult != GLEW_OK ) {
 		fprintf( stderr, "GLEW Init failed: %s\n", glewGetErrorString(glewResult) );
 		return 1;
 	}
 
-	bool quit = false;
+	printf( "GL_VENDOR=(%s)\n", glGetString(GL_VENDOR) );
+	printf( "GL_RENDERER=(%s)\n", glGetString(GL_RENDERER) );
+	printf( "GL_VERSION=(%s)\n", glGetString(GL_VERSION) );
+	printf( "GL_SHADING_LANGUAGE_VERSION=(%s)\n", glGetString(GL_SHADING_LANGUAGE_VERSION) );
 
 	glDraw::init();
 
@@ -54,9 +56,7 @@ int main() {
 				quit = true;
 			}
 		}
-
 		glDraw::frame();
-
 		SDL_GL_SwapWindow(window);
 	}
 
