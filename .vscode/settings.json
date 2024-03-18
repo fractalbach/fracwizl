@@ -1,0 +1,15 @@
+{
+	"editor.insertSpaces": false,
+	"editor.cursorStyle": "block",
+	"cmake.configureOnOpen": false,
+	"C_Cpp.default.compilerPath": "/usr/bin/clang++",
+	"files.associations": {
+		"__availability": "cpp",
+		"__config": "cpp",
+		"__locale": "cpp",
+		"chrono": "cpp",
+		"ctime": "cpp",
+		"locale": "cpp",
+		"algorithm": "cpp"
+	}
+}

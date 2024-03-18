@@ -1,0 +1,1 @@
+./run/build.sh && ./out/fwizl.out

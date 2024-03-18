@@ -1,0 +1,18 @@
+{
+    "configurations": [
+        {
+            "name": "DEBUG: clang++",
+            "preLaunchTask": "BUILD: clang++",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "${workspaceFolder}/out/fwizl.out",
+            "args": [],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}/out",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "lldb",
+        }
+    ],
+    "version": "2.0.0"
+}
