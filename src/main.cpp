@@ -48,12 +48,20 @@ int main() {
 	printf( "GL_SHADING_LANGUAGE_VERSION=(%s)\n", glGetString(GL_SHADING_LANGUAGE_VERSION) );
 
 	glDraw::init();
+	glDraw::reload();
 
 	while ( !quit ) {
 		SDL_Event event;
 		while ( SDL_PollEvent(&event) ) {
-			if ( event.type == SDL_QUIT ) {
+			switch ( event.type ) {
+			case SDL_QUIT:
 				quit = true;
+				break;
+			case SDL_WINDOWEVENT:
+				if (event.window.event == SDL_WINDOWEVENT_RESIZED) {
+					glDraw::onWindowResize( event.window.data1, event.window.data2 );
+				}
+				break;
 			}
 		}
 		glDraw::frame();

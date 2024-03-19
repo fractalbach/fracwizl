@@ -4,27 +4,49 @@
 #include "global.h"
 namespace glDraw {
 
-double programStartTime = g_timeMs();
-float verts[] = { -0.5f, -0.5f, 0.0f,   0.5f, -0.5f, 0.0f,   0.5f,  0.5f, 0.0f };
-unsigned int VBO = 0;
 const char *vertexShaderSrc = R"(
 #version 330 core
 layout (location = 0) in vec3 aPos;
+
 void main() {
 	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
 }
 )";
-unsigned int vertexShader = 0;
+
 const char *fragmentShaderSrc = R"(
 #version 330 core
-out vec4 FragColor;
+out vec4 fragColor;
+
+uniform float iTime;
+uniform uvec2 iResolution;
 
 void main() {
-	FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+	vec3 col = 0.5 + 0.5 * cos( iTime + vec3(2,4,6) );
+	fragColor = vec4( col, 1.0 );
 }
 )";
-unsigned int fragmentShader = 0;
+
+const int SLOT_UNIFORM_TIME = 0;
+const int SLOT_UNIFORM_RES = 1;
+
+double programStartTime = g_timeMs();
+const float z = 0.0f;
+// const float a = 1.0f;
+const float a = 0.5f;
+// float verts[] = { a,a,z, a,-a,z, -a,-a,z, -a,a,z };
+// unsigned int indices[] = { 0,1,3, 1,2,3 };
+float verts[] = { -a,-a,z, a,-a,z, -a,a,z, a,a,z };
+unsigned int indices[] = { 0,1,2, 2,1,3 };
+unsigned int VBO = 0;
 unsigned int VAO = 0;
+unsigned int EBO = 0;
+unsigned int vertexShader = 0;
+unsigned int fragmentShader = 0;
+unsigned int shaderProgram = 0;
+bool setting_wireframeMode = false;
+int width = g_defaultScreenWidth;
+int height = g_defaultScreenHeight;
+
 
 
 void init() {
@@ -32,24 +54,36 @@ void init() {
 
 	glGenBuffers( 1, &VBO );
 	glGenVertexArrays( 1, &VAO );
+	glGenBuffers( 1, &EBO );
+	vertexShader = glCreateShader( GL_VERTEX_SHADER );
+	fragmentShader = glCreateShader( GL_FRAGMENT_SHADER );
+	shaderProgram = glCreateProgram();
+}
 
+void reload() {
 	glBindBuffer( GL_ARRAY_BUFFER, VBO );
 	glBindVertexArray( VAO );
+	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, EBO );
 
 	glBufferData( GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW );
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW );
 
-	vertexShader = glCreateShader( GL_VERTEX_SHADER );
+	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0 );
+	glEnableVertexAttribArray( 0 );
+
 	glShaderSource( vertexShader, 1, &vertexShaderSrc, NULL );
 	glCompileShader( vertexShader );
-	int glShaderCompileSuccess;
-	glGetShaderiv( vertexShader, GL_COMPILE_STATUS, &glShaderCompileSuccess );
-	if (!glShaderCompileSuccess) {
-		char infoLog[512];
-		glGetShaderInfoLog( vertexShader, 512, NULL, infoLog );
-		fprintf( stderr, "Vertex Shader Compilation Failure: %s\n", infoLog );
+
+	{
+		int glShaderCompileSuccess;
+		glGetShaderiv( vertexShader, GL_COMPILE_STATUS, &glShaderCompileSuccess );
+		if (!glShaderCompileSuccess) {
+			char infoLog[512];
+			glGetShaderInfoLog( vertexShader, 512, NULL, infoLog );
+			fprintf( stderr, "Vertex Shader Compilation Failure: %s\n", infoLog );
+		}
 	}
 
-	fragmentShader = glCreateShader( GL_FRAGMENT_SHADER );
 	glShaderSource( fragmentShader, 1, &fragmentShaderSrc, NULL );
 	glCompileShader( fragmentShader );
 
@@ -62,9 +96,6 @@ void init() {
 			fprintf( stderr, "Fragment Shader Compilation Failure: %s\n", infoLog );
 		}
 	}
-
-	unsigned int shaderProgram;
-	shaderProgram = glCreateProgram();
 
 	glAttachShader( shaderProgram, vertexShader );
 	glAttachShader( shaderProgram, fragmentShader );
@@ -79,11 +110,12 @@ void init() {
 			fprintf( stderr, "Shader Program Linker Failure: %s\n", infoLog );
 		}
 	}
+}
 
-	glUseProgram(shaderProgram);
-
-	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0 );
-	glEnableVertexAttribArray( 0 );
+void onWindowResize( int w, int h ) {
+	width = w;
+	height = h;
+	glViewport( 0, 0, w, h );
 }
 
 void cleanup() {
@@ -103,8 +135,20 @@ void frame() {
 	glClearColor( r, g, b, 1.0f );
 	glClear(GL_COLOR_BUFFER_BIT);
 
+	if (setting_wireframeMode) {
+		glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
+	} else {
+		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
+	}
 
-	glDrawArrays( GL_TRIANGLES, 0, 3 );
+	glUniform1f( 0, iTime );
+	glUniform2ui( 1, width, height );
+
+
+	glUseProgram( shaderProgram );
+	glBindVertexArray( VAO );
+	glDrawElements( GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0 );
+	glBindVertexArray( 0 );
 }
 
 
