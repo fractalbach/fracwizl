@@ -1,42 +1,26 @@
 #ifndef DRAW_H
 #define DRAW_H
+#include <string>
 #include <GL/glew.h>
 #include "global.h"
+#include "loader.h"
 namespace glDraw {
 
-const char *vertexShaderSrc = R"(
-#version 330 core
-layout (location = 0) in vec3 aPos;
 
-void main() {
-	gl_Position = vec4(aPos.x, aPos.y, aPos.z, 1.0);
-}
-)";
+const float z = 0.0f;
+const float a = 0.5f;
+const float o = 1.0f;
 
-const char *fragmentShaderSrc = R"(
-#version 330 core
-out vec4 fragColor;
+float justVerts[] = { -a,-a,z, a,-a,z, -a,a,z, a,a,z };
+float justColors[] = { o,z,z, z,o,z, z,z,o, o,z,z };
+unsigned int indices[] = { 0,1,2, 2,1,3 };
 
-uniform float iTime;
-uniform uvec2 iResolution;
-
-void main() {
-	vec3 col = 0.5 + 0.5 * cos( iTime + vec3(2,4,6) );
-	fragColor = vec4( col, 1.0 );
-}
-)";
-
-const int SLOT_UNIFORM_TIME = 0;
-const int SLOT_UNIFORM_RES = 1;
+const int nVerts = 4;
+const int nAttributes = 2;
+const int vertDataLen = nVerts * nAttributes * 3;
+float vertData[ vertDataLen ];
 
 double programStartTime = g_timeMs();
-const float z = 0.0f;
-// const float a = 1.0f;
-const float a = 0.5f;
-// float verts[] = { a,a,z, a,-a,z, -a,-a,z, -a,a,z };
-// unsigned int indices[] = { 0,1,3, 1,2,3 };
-float verts[] = { -a,-a,z, a,-a,z, -a,a,z, a,a,z };
-unsigned int indices[] = { 0,1,2, 2,1,3 };
 unsigned int VBO = 0;
 unsigned int VAO = 0;
 unsigned int EBO = 0;
@@ -48,9 +32,16 @@ int width = g_defaultScreenWidth;
 int height = g_defaultScreenHeight;
 
 
-
 void init() {
 	programStartTime = g_timeMs();
+
+	// package up the vert data to feed to the VAO
+	for (int i=0; i<nVerts; i++) {
+		for (int j=0; j<3; j++) {
+			vertData[ 6*i + j ] = justVerts[ 3*i + j ];
+			vertData[ 6*i + 3 + j ] = justColors[ 3*i + j ];
+		}
+	}
 
 	glGenBuffers( 1, &VBO );
 	glGenVertexArrays( 1, &VAO );
@@ -60,18 +51,38 @@ void init() {
 	shaderProgram = glCreateProgram();
 }
 
+
 void reload() {
+
+	// Load data from files
+
+	std::string vertexShaderSrc = loader::loadFile( "src/shaders/basic.vert" );
+	std::string fragmentShaderSrc = loader::loadFile( "src/shaders/basic.frag" );
+	const char* cVertexShaderSrc = vertexShaderSrc.c_str();
+	const char* cFragmentShaderSrc = fragmentShaderSrc.c_str();
+
+	// Update Vertex Data
+
 	glBindBuffer( GL_ARRAY_BUFFER, VBO );
 	glBindVertexArray( VAO );
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, EBO );
 
-	glBufferData( GL_ARRAY_BUFFER, sizeof(verts), verts, GL_STATIC_DRAW );
+	glBufferData( GL_ARRAY_BUFFER, sizeof(vertData), vertData, GL_STATIC_DRAW );
 	glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW );
 
-	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0 );
+	// vertex attributes
+	const int stride = 6*sizeof(float);
+	const int colorOffset = 3*sizeof(float);
+	// attribute: position
+	glVertexAttribPointer( 0, 3, GL_FLOAT, GL_FALSE, stride, (void*)0 );
 	glEnableVertexAttribArray( 0 );
+	// attribute: color
+	glVertexAttribPointer( 1, 3, GL_FLOAT, GL_FALSE, stride, (void*)colorOffset );
+	glEnableVertexAttribArray( 1 );
 
-	glShaderSource( vertexShader, 1, &vertexShaderSrc, NULL );
+	// Compile Shaders
+
+	glShaderSource( vertexShader, 1, &cVertexShaderSrc, NULL );
 	glCompileShader( vertexShader );
 
 	{
@@ -84,7 +95,7 @@ void reload() {
 		}
 	}
 
-	glShaderSource( fragmentShader, 1, &fragmentShaderSrc, NULL );
+	glShaderSource( fragmentShader, 1, &cFragmentShaderSrc, NULL );
 	glCompileShader( fragmentShader );
 
 	{
@@ -96,6 +107,8 @@ void reload() {
 			fprintf( stderr, "Fragment Shader Compilation Failure: %s\n", infoLog );
 		}
 	}
+
+	// Link Shaders
 
 	glAttachShader( shaderProgram, vertexShader );
 	glAttachShader( shaderProgram, fragmentShader );
@@ -141,9 +154,8 @@ void frame() {
 		glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
 	}
 
-	glUniform1f( 0, iTime );
-	glUniform2ui( 1, width, height );
-
+	glUniform1f( glGetUniformLocation( shaderProgram, "iTime" ), iTime );
+	glUniform2ui( glGetUniformLocation( shaderProgram, "iResolution" ), width, height );
 
 	glUseProgram( shaderProgram );
 	glBindVertexArray( VAO );
@@ -153,4 +165,4 @@ void frame() {
 
 
 } // namespace glDraw
-#endif // #define DRAW_H
+#endif // #ifndef DRAW_H

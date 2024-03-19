@@ -15,6 +15,8 @@ clang++ \
 	-std=c++17 \
 	-fcolor-diagnostics \
 	-fansi-escape-codes \
+	-fstack-protector-all \
+	-fsanitize=address \
 	-g \
 	-lSDL2 \
 	-lGLEW \

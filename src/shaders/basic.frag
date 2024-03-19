@@ -1,6 +1,15 @@
 #version 330 core
-out vec4 FragColor;
+
+in vec3 vertColor;
+
+out vec4 fragColor;
+
+uniform float iTime;
+uniform uvec2 iResolution;
 
 void main() {
-	FragColor = vec4(1.0f, 0.5f, 0.2f, 1.0f);
+	vec3 col = 0.5 + 0.5 * cos( iTime + vec3(2,4,6) );
+	col = mix( col, vertColor, 0.5 );
+	col = vertColor;
+	fragColor = vec4( col, 1.0 );
 }

@@ -8,8 +8,6 @@
 int main() {
 
 	const char * title = "FWIZL";
-	int width = g_defaultScreenWidth;
-	int height = g_defaultScreenHeight;
 	bool quit = false;
 
 	printf( "%s", (const char *)INTRO_TEXT );
@@ -23,7 +21,7 @@ int main() {
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 3 );
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE );
 
-	SDL_Window * window = SDL_CreateWindow( title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );
+	SDL_Window * window = SDL_CreateWindow( title, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, g_defaultScreenWidth, g_defaultScreenHeight, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE );
 	if ( !window ) {
 		fprintf( stderr, "Window creation failed: %s\n", SDL_GetError() );
 		return 1;

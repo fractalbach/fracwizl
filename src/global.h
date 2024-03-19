@@ -10,4 +10,4 @@ double g_timeMs() {
 	return double( std::chrono::duration_cast<std::chrono::milliseconds>(p1.time_since_epoch()).count() ) / 1000.0f;
 }
 
-#endif // #define GLOBAL_H
+#endif // #ifndef GLOBAL_H
