@@ -18,6 +18,7 @@ unsigned int indices[] = { 0,1,2, 2,1,3 };
 const int nVerts = 4;
 const int nAttributes = 2;
 const int vertDataLen = nVerts * nAttributes * 3;
+const int floatsPerDatumz = 6;
 float vertData[ vertDataLen ];
 
 double programStartTime = g_timeMs();
@@ -67,8 +68,8 @@ void reload() {
 	glBindVertexArray( VAO );
 	glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, EBO );
 
-	glBufferData( GL_ARRAY_BUFFER, sizeof(vertData), vertData, GL_STATIC_DRAW );
-	glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW );
+	glBufferData( GL_ARRAY_BUFFER, sizeof(vertData), vertData, GL_DYNAMIC_DRAW );
+	glBufferData( GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_DYNAMIC_DRAW );
 
 	// vertex attributes
 	const int stride = 6*sizeof(float);
@@ -156,6 +157,15 @@ void frame() {
 
 	glUniform1f( glGetUniformLocation( shaderProgram, "iTime" ), iTime );
 	glUniform2ui( glGetUniformLocation( shaderProgram, "iResolution" ), width, height );
+
+	for (int i=0; i<nVerts; i++) {
+		int vertIndex = floatsPerDatumz * i;
+		int justVertsIndex = 3 * i;
+		vertData[vertIndex] = justVerts[justVertsIndex] + cosf(iTime);
+		vertData[vertIndex+1] = justVerts[justVertsIndex+1] + sinf(iTime);
+
+	}
+	glBufferData( GL_ARRAY_BUFFER, sizeof(vertData), vertData, GL_DYNAMIC_DRAW );
 
 	glUseProgram( shaderProgram );
 	glBindVertexArray( VAO );
